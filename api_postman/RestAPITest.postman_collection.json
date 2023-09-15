@@ -1,0 +1,329 @@
+{
+	"info": {
+		"_postman_id": "cf847332-9989-449d-8345-0624ef33c711",
+		"name": "RestAPITest",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3384532"
+	},
+	"item": [
+		{
+			"name": "Create New Employee",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// We can move it to Pre-request collection if we have multiple tests\r",
+							"\r",
+							"const _lodash = require(\"lodash\");  \r",
+							"\r",
+							"randomInt = (min, max) => {\r",
+							"    return _lodash.random(min, max)\r",
+							"}\r",
+							"\r",
+							"randomString = (stringLength) => {\r",
+							"    let random_str = '';\r",
+							"    let random_ascii;\r",
+							"\r",
+							"    for (let i = 0; i < stringLength; i++) {\r",
+							"        random_ascii = Math.floor((Math.random() * 25) + 97);\r",
+							"        random_str += String.fromCharCode(random_ascii)\r",
+							"    }\r",
+							"    return random_str\r",
+							"}\r",
+							"\r",
+							"pm.environment.set(\"randomAge\", randomInt(18, 100));\r",
+							"pm.environment.set(\"randomSalary\", randomInt(1000, 5000));\r",
+							"pm.environment.set(\"randomString\", randomInt(20));"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const res = pm.response.json();\r",
+							"\r",
+							"// We can move it to Tests collection if we have multiple tests\r",
+							"const resEmployeeSchema = { \r",
+							"\t\"type\": \"object\", \r",
+							"\t\"properties\": {\r",
+							"        \"status\": {\r",
+							"            \"type\": \"string\",\r",
+							"            \"enum\": [\"success\"] //or failed\r",
+							"        },\r",
+							"        \"data\": {\r",
+							"            \"type\": \"object\",\r",
+							"            \"properties\": {\r",
+							"                \"id\": {\r",
+							"                    \"type\": \"number\",\r",
+							"                    \"minimum\": 1\r",
+							"                },\r",
+							"                \"name\": {\r",
+							"                    \"type\": \"string\"\r",
+							"                },\r",
+							"                \"salary\": {\r",
+							"                    \"type\": \"string\",\r",
+							"                    \"pattern\": \"^[0-9]+$\"\r",
+							"                },\r",
+							"                \"age\": {\r",
+							"                    \"type\": \"string\",\r",
+							"                    \"pattern\": \"^[0-9]+$\"\r",
+							"                }\r",
+							"            },\r",
+							"            \"required\": [\r",
+							"                \"id\",\r",
+							"                \"name\",\r",
+							"                \"salary\",\r",
+							"                \"age\"\r",
+							"            ],\r",
+							"            \"additionalProperties\": false\r",
+							"        },\r",
+							"        \"message\": {\r",
+							"            \"type\": \"string\"\r",
+							"        }\r",
+							"    },\r",
+							"    \"required\": [\r",
+							"        \"status\",\r",
+							"        \"data\",\r",
+							"        \"message\"\r",
+							"    ],\r",
+							"    \"additionalProperties\": false\r",
+							"}; \r",
+							"\r",
+							"pm.test(\"Verify created employee successfully is 200 - OK\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"    pm.environment.set('employeeId', res.data.id);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Verify response message\", function () {\r",
+							"    pm.expect(res.message).to.eq('Successfully! Record has been added.');\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Verify response data should be valid schema\", function () {\r",
+							"    pm.expect(res).to.have.jsonSchema(resEmployeeSchema);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"{{$randomFullName}}\",\r\n    \"salary\": \"{{randomSalary}}\",\r\n    \"age\": \"{{randomAge}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/create",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get created employee",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Skip for now due to 429 Too many requests that cannot call api consequences\r",
+							"const res = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Verify get created employee successfully with status is 200 - OK\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Verify response has all keys: status, data, message\", function () {\r",
+							"    pm.expect(res).to.have.all.keys('status', 'data', 'message');\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Verify response message\", function () {\r",
+							"    pm.expect(res.message).to.equal('Successfully! Record has been fetched.')\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Verify response status value should be success\", function () {\r",
+							"    pm.expect(res.status).to.equal('success')\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Verify response message\", function () {\r",
+							"    pm.expect(res.data).to.be.null;\r",
+							"});\r",
+							"// Need to verify payload from POST request vs response data in GET request"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/employee/{{employeeId}}",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"employee",
+						"{{employeeId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete created employee",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Skip for now due to 429 Too many requests that cannot call api consequences\r",
+							"// Cleanup resource\r",
+							"pm.test(\"Verify deleted content successfully with status is 200- OK\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/delete/{{employeeId}}",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"delete",
+						"{{employeeId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get List Employees",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const res = pm.response.json();\r",
+							"// ES6: Filter results by age is greather 60 and salary is greather 300000\r",
+							"const filteredRes = res.data.filter(item => item.employee_age > 60 && item.employee_salary > 300000);\r",
+							"// We can move it to Tests collection if we have multiple tests\r",
+							"const employeeSchema = { \r",
+							"\t\"type\": \"object\", \r",
+							"\t\"properties\": {\r",
+							"        \"id\": {\r",
+							"            \"type\": \"number\",\r",
+							"            \"minimum\": 1\r",
+							"        },\r",
+							"        \"employee_name\": {\r",
+							"            \"type\": \"string\"\r",
+							"        },\r",
+							"        \"employee_salary\": {\r",
+							"            \"type\": \"number\"\r",
+							"        },\r",
+							"        \"employee_age\": {\r",
+							"            \"type\": \"number\"\r",
+							"        },\r",
+							"        \"profile_image\": {\r",
+							"            \"anyOf\": [\r",
+							"                {\r",
+							"                    \"type\": \"string\"\r",
+							"                },\r",
+							"                {\r",
+							"                    \"type\": \"null\"\r",
+							"                }\r",
+							"            ]\r",
+							"        }\r",
+							"    },\r",
+							"    \"required\": [\r",
+							"        \"id\",\r",
+							"        \"employee_name\",\r",
+							"        \"employee_salary\",\r",
+							"        \"employee_age\",\r",
+							"        \"profile_image\"\r",
+							"    ],\r",
+							"    \"additionalProperties\": false\r",
+							"}; \r",
+							"\r",
+							"pm.test(\"Verify response status code is 200 - OK\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Verify response includes all keys: status, data, message\", function () {\r",
+							"    pm.expect(res).to.have.all.keys('status', 'data', 'message');\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Verify response message\", function () {\r",
+							"    pm.expect(res.message).to.eq('Successfully! All records has been fetched.');\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Verify response status should be success\", function () {\r",
+							"    pm.expect(res.status).to.eq('success');\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Verify response data should be an array\", function () {\r",
+							"    pm.expect(filteredRes).to.be.an('array')\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Verify each item nested in response data field should be valid schema\", function () {\r",
+							"    if (filteredRes.length == 0) {\r",
+							"        return;\r",
+							"    }\r",
+							"    _.each(filteredRes, (item) => {\r",
+							"        pm.expect(item).to.be.an('object');\r",
+							"        pm.expect(item).to.have.jsonSchema(employeeSchema);\r",
+							"    })\r",
+							"});\r",
+							"// Print filtered results in console\r",
+							"console.log(filteredRes);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/employees",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"employees"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
