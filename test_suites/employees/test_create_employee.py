@@ -1,10 +1,14 @@
 import time
-
+import random
+from faker import Faker
 from libs.api_helpers.employee_api import EmployeeApi
 from libs.builders.employee_builder import EmployeeBuilder
 from assertpy import assert_that
 from text_resources.employee import EmployeeTexts
 from http import HTTPStatus
+
+
+fake = Faker()
 
 client = EmployeeApi()
 
@@ -12,9 +16,9 @@ class TestCreateEmployee:
     def test_create_employee_should_return_201_when_all_fields_are_valid(self):
         # Arrange
         employee_payload = EmployeeBuilder()\
-            .setName('longwwww')\
-            .setAge('29')\
-            .setSalary('1000')\
+            .setName(fake.name())\
+            .setAge(str(random.randint(18, 100)))\
+            .setSalary(str(random.randint(500, 1000000)))\
             .build()
         # Act
         create_empl_res = client.create_employee(employee_payload)

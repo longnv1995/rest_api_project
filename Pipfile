@@ -8,6 +8,7 @@ requests = "*"
 pytest = "*"
 assertpy = "*"
 pytest-html = "*"
+faker = "*"
 
 [dev-packages]
 
